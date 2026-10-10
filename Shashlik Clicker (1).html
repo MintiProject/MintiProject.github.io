@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shashlik Clicker</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#dfe8dc;--panel:#f2f6ef;--ink:#232a22;--mute:#5d6a5a;--ember:#d9480f;--line:#b9c7b4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171a16;--panel:#23271f;--ink:#ece8dc;--mute:#9aa392;--ember:#ff8a3d;--line:#3a4034}}
+:root[data-theme="dark"]{--bg:#171a16;--panel:#23271f;--ink:#ece8dc;--mute:#9aa392;--ember:#ff8a3d;--line:#3a4034}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Rubik,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+main{max-width:560px;margin:0 auto;padding:0 16px 24px}
+.news{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:2px solid var(--ember);margin:0 -16px 12px;padding:8px 16px;min-height:3em;font-size:.85rem;display:flex;align-items:center;cursor:pointer;user-select:none}.news.fort span{color:#2f9e44;font-weight:600}
+.news span{transition:opacity .3s}
+h1{font-size:1.1rem;font-weight:600;margin:0 0 8px;color:var(--mute)}.top{display:flex;justify-content:space-between;align-items:center}.lang{font:inherit;font-weight:600;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);padding:4px 10px;cursor:pointer}.lang:focus-visible{outline:3px solid var(--ember);outline-offset:2px}
+.count{font-size:clamp(2.2rem,11vw,3.4rem);font-weight:800;line-height:1;letter-spacing:-.02em}
+.rate{color:var(--mute);margin:6px 0 0}
+#grill{position:relative;display:block;margin:16px auto;width:min(70vw,280px);aspect-ratio:1;border:0;border-radius:50%;background:var(--panel);box-shadow:inset 0 0 0 3px var(--line);cursor:pointer;touch-action:manipulation;user-select:none}
+#grill:focus-visible,.news:focus-visible,.tab:focus-visible,.up:focus-visible,.reset:focus-visible{outline:3px solid var(--ember);outline-offset:2px}
+#grill svg{width:100%;height:100%;transition:transform .08s}
+#grill:active svg{transform:scale(.93) rotate(-3deg)}
+.pop{position:absolute;pointer-events:none;font-weight:800;color:var(--ember);animation:up .8s ease-out forwards}
+@keyframes up{to{transform:translateY(-70px);opacity:0}}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tab{flex:1;font:inherit;font-weight:600;padding:9px 4px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--mute);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ember);color:var(--bg);border-color:var(--ember)}
+h2{font-size:1rem;margin:18px 0 8px}
+.hint{color:var(--mute);font-size:.85rem;margin:0 0 8px}
+.hide{display:none}
+.up{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;font:inherit;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:8px;cursor:pointer}
+.up:disabled{opacity:.5;cursor:not-allowed}
+.up:not(:disabled){border-color:var(--ember)}
+.up b{font-weight:600}.up small{color:var(--mute);grid-column:1}
+.up .cost{grid-row:1/3;grid-column:2;align-self:center;font-weight:800;color:var(--ember)}
+.own{font-weight:800;color:var(--mute);margin-left:6px}
+.perk.done{opacity:1;border-style:dashed;border-color:var(--mute)}
+.achs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ach{font-size:.8rem;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--mute)}
+.ach.on{color:var(--ink);border-color:var(--ember)}
+.reset{margin-top:20px;background:none;border:1px solid var(--line);color:var(--mute);border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));background:var(--ember);color:var(--bg);font-weight:600;padding:10px 16px;border-radius:10px;max-width:90vw;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
+@media (prefers-reduced-motion:reduce){.pop{animation:none;opacity:0}#grill svg,.news span{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<div class="news" id="nbox" role="button" tabindex="0" title="Tap for the next headline"><span id="news"></span></div>
+<div class="top"><h1>Shashlik Clicker</h1><button class="lang" id="lang"></button></div>
+<div class="count" id="count">0</div>
+<p class="rate" id="rate"></p>
+<button id="grill" aria-label="Grill a shashlik">
+<svg viewBox="0 0 200 200" aria-hidden="true">
+<line x1="20" y1="150" x2="180" y2="50" stroke="#9a9a94" stroke-width="4" stroke-linecap="round"/>
+<g stroke="#4a2410" stroke-width="2">
+<rect x="48" y="104" width="30" height="30" rx="9" fill="#a0481c" transform="rotate(-32 63 119)"/>
+<rect x="78" y="86" width="30" height="30" rx="9" fill="#c45a22" transform="rotate(-32 93 101)"/>
+<rect x="104" y="70" width="30" height="30" rx="9" fill="#a0481c" transform="rotate(-32 119 85)"/>
+<rect x="130" y="54" width="28" height="28" rx="9" fill="#c45a22" transform="rotate(-32 144 68)"/>
+</g>
+<circle cx="93" cy="101" r="6" fill="#e8d6e8" opacity=".9"/><circle cx="146" cy="68" r="5" fill="#e8d6e8" opacity=".9"/>
+</svg>
+</button>
+<div class="tabs" role="tablist">
+<button class="tab" role="tab" data-tab="shop" aria-selected="true">Shop</button>
+<button class="tab" role="tab" data-tab="pres" aria-selected="false">Prestige</button>
+<button class="tab" role="tab" data-tab="ach" aria-selected="false">Awards</button>
+</div>
+<section id="tab-shop">
+<h2>Boosts</h2><div id="boost"></div>
+<h2>Click upgrades</h2><div id="clk"></div>
+<h2>Producers</h2><div id="sec"></div>
+</section>
+<section id="tab-pres" class="hide">
+<p class="hint">Prestige points: <b id="pp">0</b> · Prestiges done: <b id="pn">0</b></p>
+<button class="up" id="pbtn"><span><b id="plabel"></b></span><span class="cost">10T 🍢</span><small>Resets shashliks, upgrades and producers. Gives +5 prestige points. Achievements and perks stay.</small></button>
+<h2>Perks</h2><div id="perks"></div>
+</section>
+<section id="tab-ach" class="hide">
+<p class="hint" id="achinfo"></p><div class="achs" id="achs"></div>
+</section>
+<button class="reset" id="reset">Reset everything</button>
+</main>
+<div id="toast" role="status"></div>
+<script>
+(function(){
+const $=i=>document.getElementById(i);
+let LG='ru';try{LG=location.hash==='#en'?'en':location.hash==='#ru'?'ru':localStorage.getItem('shashlik-lang')==='en'?'en':'ru'}catch(e){}
+const ru=LG==='ru',L2=(r,e)=>ru?r:e;
+const NM={marinad:'Marinade',luk:'Onion rings',uksus:'Drop of vinegar',kiwi:'Kiwi marinade',spice:'Secret spice',teshcha:'Mother-in-law’s recipe',mangal:'Mangal',shampur:'Skewers',vanya:'Uncle Vanya',dacha:'Dacha',brigada:'Grill crew',road:'Roadside stand',truck:'Meat truck',factory:'Shashlik factory',kolkhoz:'BBQ collective farm',spices:'Spice plant',galaxy:'Galactic mangal',portal:'Portal to Georgia',god:'Mangal God',ded:'Grandpa’s recipe',coal:'Eternal coals',marin5:'Barrel of marinade',gold:'Golden skewer',nina:'Aunt Nina’s discount',geo:'Georgian school',fort:'Fortune on a skewer',sov:'Shashlik council'};
+const nm=(id,r)=>ru?r:(NM[id]||r);
+const TNE=['Hot adjika','Birch wood','Grandpa’s secret'];
+const PDR={ded:'+50% ко всей добыче',coal:'Каждый забег начинается с 1 000 шашлыков',marin5:'Каждый забег начинается с 5 Маринадов',gold:'Клики в 2 раза сильнее',nina:'Всё дешевле на 10%',geo:'Производство ×2',fort:'Часть новостей становится зелёными предсказаниями. Нажми — получишь бонус',sov:'+100% ко всей добыче'};
+const EA={t1:'First bite',t100:'Lit the mangal',t1000:'A thousand shashliks',t10000:'The neighbors came',t100000:'Picnic of the year',t1000000:'Shashlik millionaire',t100000000:'Shashlik for the whole district',t10000000000:'Shashlik tycoon',t1000000000000:'A trillion skewers',t10000000000000:'Time for a new recipe',c10:'Light touch',c100:'Quick fingers',c1000:'Master’s hand',c10000:'Calloused fingers',c100000:'Skewer in the blood',p1:'New Recipe',p3:'Recipe to taste',p10:'Recipe master',news50:'Tabloid addict'};
+const an=a=>{if(ru)return a.name;if(EA[a.id])return EA[a.id];const u=SEC.find(x=>a.id.startsWith(x.id));return u?NM[u.id]+' ×'+a.id.slice(u.id.length):a.name};
+const hr=a=>{const n=Number(a.id.slice(1));if(/^t\d/.test(a.id))return 'Приготовь '+fmt(n)+' шашлыков за всё время';if(/^c\d/.test(a.id))return 'Кликни '+fmt(n)+' раз';if(/^p\d/.test(a.id))return 'Сделай престиж: '+n+' раз';if(/^news/.test(a.id))return 'Нажми на новости 50 раз';const u=SEC.find(x=>a.id.startsWith(x.id));return u?'Купи '+a.id.slice(u.id.length)+' × '+u.name:a.d};
+const ANR=['козы','гуси','голуби','ёжики','вороны','коровы','овцы','совы','барсуки','утки'],RDR=['лавашом','луком','солёными огурцами','кефиром','народными песнями','пробками','садовыми гномами','вайфаем'];
+const LADR=[[0,'Тебе хочется пожарить шашлык. Но никто не хочет его есть.'],[5,'Первая партия — угли. Соседская собака вежливо её обнюхала.'],[50,'Семья согласилась попробовать твой шашлык.'],[100,'Твой шашлык популярен на улице.'],[500,'На рынке начинают говорить о твоём шашлыке.'],[1e3,'О твоём шашлыке говорят в трёх деревнях.'],[1e4,'На твой шашлык записываются в очередь.'],[1e5,'У шашлыка свой сайт. Главный комментарий: где лаваш.'],[1e6,'За одним шампуром едут через всю страну.'],[1e7,'Два города открыли музеи шашлыка.'],[1e8,'В честь твоего шашлыка объявлен государственный праздник.'],[1e9,'Твой шашлык взят под наблюдение правительства.'],[1e10,'Гости с соседних планет просят шампур.'],[1e11,'Древние боги проснулись голодными.'],[1e12,'Вселенная теперь маринад — до последней молекулы.'],[1e13,'пора за новым рецептом']];
+const FQR=['Шампур, вовремя перевёрнутый, спасёт девять.','Лучший маринад — терпение.','Сегодня дым дует в твою сторону. Наслаждайся.','Поделись лавашом — и он поделится в ответ.'];
+const newsR=()=>{const o=S.own,a=R(ANR),r=R(RDR),L=['спрос на шашлык остаётся вкусным.','местный дядя уверяет: секрет в маринаде. Подробностей не даёт.','исследование: на 9 дачах из 10 есть мангал.','ветер сменил направление — весь район внезапно проголодался.','эксперт советует не крутить шампур каждые 3 секунды. Никто не слушает.','вегетарианец прошёл мимо мангала и пересмотрел жизненные решения.','сосед взял шампур на минутку. Не вернул.','лук плачет от масштабов производства.','дым виден за 40 км. Источники сообщают: «всё нормально».','мужчина утверждает, что его шашлык лучше. Ему никто не верит.','дефицит лаваша. Лаваш всё отрицает.','кот кружит у мангала, это считается нормой.',`учёные заметили: ${a} становятся добрее после шашлыка!`,`${a} замечены у мангала; специалисты разводят руками.`,`шеф уверяет: шашлык отлично сочетается с ${r}. Эксперты разделились.`,'мужчина ограбил банк и купил шашлык.'];
+if(o.mangal)L.push('местные мангалы обвиняют в росте числа соседей, которые «просто заглянули».');if(o.shampur)L.push('дефицит шампуров! Эксперты: каждый шампур оказывается в чьём-то гараже.');if(o.vanya)L.push('~«Ещё чуть-чуть соли.» -Дядя Ваня','~«Не так, давай сюда.» -Дядя Ваня','~«В моё время переворачивали на глаз.» -Дядя Ваня');if(o.dacha)L.push('дачники подозреваются в найме нелегальных родственников у мангала!');if(o.brigada)L.push('бригады мангальщиков создали профсоюз; первое требование — перерывы рядом с лавашом.');if(o.road)L.push('шашлычные у трассы вызвали пробку; водители говорят: оно того стоит.');if(o.truck)L.push('грузовики с мясом ездят колонной; власти называют это подозрительно организованным.');if(o.factory)L.push('шашлычные фабрики связывают с внезапным исчезновением воскресений!');if(o.kolkhoz)L.push('колхоз полностью перешёл на барбекю; коров не спросили.');if(o.spices)L.push('выбросы завода специй заставили чихнуть весь район в унисон!');if(o.galaxy)L.push('астрономы подтвердили: дым на Юпитере — не буря, а мангал.');if(o.portal)L.push('туризм в Грузию растёт; местные просят сдвинуть портал чуть левее.');if(o.god)L.push('шепчутся, что Бог мангала не ест шашлык. Он сам и есть шашлык.');if(o.marinad)L.push('слухи о маринаде: лук, кефир, уксус... настоящий рецепт никто не знает!');if(Object.keys(S.tier).length)L.push('мастера уверяют, что на берёзовых дровах вкуснее; наука не согласна.');if(S.pres>0)L.push('слух: старый рецепт вернулся, и он ещё вкуснее.');if(S.n>=PC)L.push('из дыма шепчет новый рецепт. Может, пора?');if(S.clicks>=500)L.push('ты кликнул '+S.clicks+' раз. Шампур это чувствует.');if(Math.random()<.02)L.push('~'+R(['Тебя выбрали. Шампур скоро позвонит.','Не открывай дверь. Запах доносится изнутри.','Конец близок. Возьми хлеб.']));const ld=LADR.filter(x=>S.total>=x[0]).pop()[1];L.push('~'+ld,'~'+ld);return L};
+const CLK=[['marinad','Маринад',15,1],['luk','Лук кольцами',250,5],['uksus','Капля уксуса',4000,25],['kiwi','Киви в маринаде',60000,150],['spice','Секретная специя',1e6,800],['teshcha','Рецепт от тёщи',2e7,5000]].map(a=>({id:a[0],name:a[1],base:a[2],click:a[3]}));
+const SEC=[['mangal','Мангал',50,1],['shampur','Шампуры',400,6],['vanya','Дядя Ваня',2500,30],['dacha','Дача',18000,180],['brigada','Мангальная бригада',120000,1000],['road','Шашлычная у трассы',9e5,6000],['truck','Грузовик с мясом',7e6,35000],['factory','Фабрика шашлыка',5.5e7,2e5],['kolkhoz','Колхоз-барбекю',4.5e8,1.2e6],['spices','Завод специй',4e9,7e6],['galaxy','Галактический мангал',3.5e10,4e7],['portal','Портал в Грузию',3e11,2.5e8],['god','Бог мангала',2e12,1.5e9]].map(a=>({id:a[0],name:a[1],base:a[2],sec:a[3]}));
+const ALL=CLK.concat(SEC),PC=1e13;
+const PERKS=[['ded','Дедушкин рецепт','+50% all production',2],['coal','Вечные угли','Start each run with 1,000 shashliks',3],['marin5','Бочка маринада','Start each run with 5 Маринад',4],['gold','Золотой шампур','Clicks are 2× stronger',5],['nina','Скидка тёти Нины','Everything costs 10% less',6],['geo','Грузинская школа','Producers make 2× more',8],['fort','Предсказание на шампуре','Some headlines become green fortunes. Tap one for a bonus',4],['sov','Шашлычный совет','+100% all production',20]].map(a=>({id:a[0],name:a[1],desc:a[2],cost:a[3]}));
+let S={n:0,total:0,clicks:0,own:{},tier:{},pp:0,ppE:0,pres:0,perks:{},ach:{}};
+try{const raw=localStorage.getItem('shashlik-v2')||localStorage.getItem('shashlik-v1');if(raw){const p=JSON.parse(raw);if(p&&typeof p.n==='number'){for(const k in p)S[k]=p[k];S.total=Math.max(S.total||0,S.n)}}}catch(e){}
+const save=()=>{try{localStorage.setItem('shashlik-v2',JSON.stringify(S))}catch(e){}};
+const fmt=x=>{x=Math.floor(x);if(x<1e4)return''+x;const s=['','K','M','B','T','Qa','Qi'];let i=0;while(x>=1000&&i<6){x/=1000;i++}return x.toFixed(x<10?2:x<100?1:0)+s[i]};
+const fmt2=x=>x<100?(Math.round(x*10)/10)+'':fmt(x);
+const disc=()=>S.perks.nina?.9:1;
+const cost=u=>Math.ceil(u.base*Math.pow(1.15,S.own[u.id]||0)*disc());
+const achN=()=>Object.keys(S.ach).length;
+const gm=()=>(1+.01*achN())*(S.perks.ded?1.5:1)*(S.perks.sov?2:1);
+const cv=()=>{let c=1;CLK.forEach(u=>{c+=u.click*(S.own[u.id]||0)});return c*(S.perks.gold?2:1)*gm()};
+const sv=()=>{let s=0;SEC.forEach(u=>{s+=u.sec*(S.own[u.id]||0)*Math.pow(2,S.tier[u.id]||0)});return s*(S.perks.geo?2:1)*gm()};
+const add=x=>{S.n+=x;S.total+=x};
+// toast
+let tt;const toast=m=>{const t=$('toast');t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>{t.style.opacity=0},2800)};
+// shop
+const btns={};
+const mk=(u,box,desc)=>{const b=document.createElement('button');b.className='up';b.innerHTML='<span><b>'+nm(u.id,u.name)+'</b><span class="own"></span></span><span class="cost"></span><small>'+desc+'</small>';b.onclick=()=>{const c=cost(u);if(S.n>=c){S.n-=c;S.own[u.id]=(S.own[u.id]||0)+1;save();draw()}};$(box).appendChild(b);btns[u.id]=b};
+CLK.forEach(u=>mk(u,'clk','+'+u.click+L2(' за клик',' per click')));
+SEC.forEach(u=>mk(u,'sec','+'+fmt(u.sec)+L2(' в секунду',' per second')));
+// boosts
+const TN=['Острая аджика','Берёзовые дрова','Секрет деда'],TH=[1,10,25],TC=[10,100,500];
+let bKey='x',bList=[];
+const boosts=()=>{const a=[];SEC.forEach(u=>{const t=S.tier[u.id]||0;if(t<3&&(S.own[u.id]||0)>=TH[t])a.push({u:u,t:t,c:Math.ceil(u.base*TC[t]*disc())})});return a};
+const drawBoosts=()=>{const a=boosts(),k=a.map(x=>x.u.id+x.t).join();
+if(k!==bKey){bKey=k;const box=$('boost');box.innerHTML='';bList=[];
+if(!a.length)box.innerHTML='<p class="hint">'+L2('Покупай больше производителей, чтобы открыть усиления.','Buy more producers to unlock boosts.')+'</p>';
+a.forEach(x=>{const b=document.createElement('button');b.className='up';b.innerHTML='<span><b>'+(ru?TN:TNE)[x.t]+' ('+nm(x.u.id,x.u.name)+')</b></span><span class="cost"></span><small>'+nm(x.u.id,x.u.name)+L2(': добыча ×2',' makes 2× more')+'</small>';b.onclick=()=>{const c=Math.ceil(x.u.base*TC[x.t]*disc());if(S.n>=c){S.n-=c;S.tier[x.u.id]=x.t+1;save();draw()}};box.appendChild(b);bList.push({b:b,x:x})})}
+bList.forEach(o=>{const c=Math.ceil(o.x.u.base*TC[o.x.t]*disc());o.b.disabled=S.n<c;o.b.querySelector('.cost').textContent=fmt(c)})};
+// perks
+const pb={};
+PERKS.forEach(p=>{const b=document.createElement('button');b.className='up perk';b.innerHTML='<span><b>'+nm(p.id,p.name)+'</b></span><span class="cost"></span><small>'+(ru?PDR[p.id]:p.desc)+'</small>';b.onclick=()=>{if(!S.perks[p.id]&&S.pp>=p.cost){S.pp-=p.cost;S.perks[p.id]=1;save();draw()}};$('perks').appendChild(b);pb[p.id]=b});
+// achievements
+const ACH=[];
+[[1,'Первый кусочек'],[100,'Разжёг мангал'],[1e3,'Тысяча шашлыков'],[1e4,'Соседи пришли'],[1e5,'Пикник года'],[1e6,'Миллионер-шашлычник'],[1e8,'Шашлык на весь район'],[1e10,'Шашлычный магнат'],[1e12,'Триллион мяса'],[1e13,'Пора за новым рецептом']].forEach(m=>ACH.push({id:'t'+m[0],name:m[1],d:'Grill '+fmt(m[0])+' shashliks in total',t:()=>S.total>=m[0]}));
+[[10,'Лёгкая рука'],[100,'Быстрые пальцы'],[1e3,'Рука мастера'],[1e4,'Мозоли на пальцах'],[1e5,'Шампур в крови']].forEach(m=>ACH.push({id:'c'+m[0],name:m[1],d:'Click '+fmt(m[0])+' times',t:()=>S.clicks>=m[0]}));
+SEC.forEach(u=>[10,50].forEach(k=>ACH.push({id:u.id+k,name:u.name+' ×'+k,d:'Own '+k+' × '+u.name,t:()=>(S.own[u.id]||0)>=k})));
+[[1,'Новый рецепт'],[3,'Рецепт на вкус'],[10,'Мастер рецептов']].forEach(m=>ACH.push({id:'p'+m[0],name:m[1],d:'Prestige '+m[0]+' time(s)',t:()=>S.pres>=m[0]}));
+ACH.push({id:'news50',name:'Жёлтая пресса',d:'Tap the news ticker 50 times',t:()=>(S.nclk||0)>=50});const ac={};
+ACH.forEach(a=>{const d=document.createElement('div');d.className='ach';$('achs').appendChild(d);ac[a.id]=d});
+const drawAch=()=>{ACH.forEach(a=>{const on=!!S.ach[a.id],d=ac[a.id];d.className='ach'+(on?' on':'');d.textContent=on?'🏆 '+an(a):'🔒 '+(ru?hr(a):a.d)});$('achinfo').textContent=achN()+' / '+ACH.length+L2(' открыто · каждая даёт +1% к добыче',' unlocked · each gives +1% production')};
+const checkAch=()=>{let ch=0;ACH.forEach(a=>{if(!S.ach[a.id]&&a.t()){S.ach[a.id]=1;ch=1;toast('🏆 '+an(a))}});if(ch){drawAch();save()}};
+// draw
+let pArm=0,rArm=0;
+const draw=()=>{
+$('count').textContent=fmt(S.n)+' 🍢';
+$('rate').textContent=fmt2(cv())+L2(' за клик · ',' per click · ')+fmt2(sv())+L2(' в секунду',' per second');
+ALL.forEach(u=>{const b=btns[u.id],c=cost(u);b.disabled=S.n<c;b.querySelector('.cost').textContent=fmt(c);b.querySelector('.own').textContent=S.own[u.id]?'×'+S.own[u.id]:''});
+drawBoosts();
+$('pp').textContent=S.pp;$('pn').textContent=S.pres;
+$('pbtn').disabled=S.n<PC;$('plabel').textContent=pArm?L2('Нажми ещё раз','Tap again to confirm'):L2('Новый рецепт','New Recipe');
+PERKS.forEach(p=>{const b=pb[p.id],d=!!S.perks[p.id];b.className='up perk'+(d?' done':'');b.disabled=d||S.pp<p.cost;b.querySelector('.cost').textContent=d?L2('куплено','owned'):p.cost+L2(' оч.',' pts')});
+$('reset').textContent=rArm?L2('Нажми ещё раз, чтобы стереть всё','Tap again to erase everything'):L2('Сбросить всё','Reset everything')};
+// actions
+$('grill').onclick=e=>{const g=cv();add(g);S.clicks++;draw();
+const p=document.createElement('span');p.className='pop';p.textContent='+'+fmt2(g);
+const r=$('grill').getBoundingClientRect();
+p.style.left=(e.clientX?e.clientX-r.left:r.width/2)+'px';p.style.top=(e.clientY?e.clientY-r.top:r.height/2)+'px';
+$('grill').appendChild(p);setTimeout(()=>p.remove(),800)};
+$('pbtn').onclick=()=>{if(S.n<PC)return;if(!pArm){pArm=1;setTimeout(()=>{pArm=0;draw()},4000);draw();return}
+pArm=0;S.n=S.perks.coal?1000:0;S.own={};S.tier={};if(S.perks.marin5)S.own.marinad=5;S.pp+=5;S.ppE+=5;S.pres++;bKey='x';save();toast(L2('Новый рецепт! +5 очков престижа','New Recipe! +5 prestige points'));draw();checkAch()};
+$('reset').onclick=()=>{if(!rArm){rArm=1;setTimeout(()=>{rArm=0;draw()},4000);draw();return}
+rArm=0;S={n:0,total:0,clicks:0,own:{},tier:{},pp:0,ppE:0,pres:0,perks:{},ach:{}};bKey='x';save();drawAch();draw()};
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t));['shop','pres','ach'].forEach(k=>$('tab-'+k).classList.toggle('hide',k!==t.dataset.tab))});
+// news
+const G=['Shashlik demand remains tasty.','Local uncle insists the secret is the marinade. He will not elaborate.','Study: 9 out of 10 dachas contain a mangal.','Wind changes direction, entire neighborhood suddenly hungry.','Expert says do not flip the skewer every 3 seconds. Nobody listens.','Vegetarian walks past grill, reconsiders life choices.','Neighbor borrows a skewer. Returns zero.','Onions weep openly at the scale of operation.','Smoke visible from 40 km away. Sources say "it\'s fine".','Man claims his shashlik is better. Nobody believes him.','Lavash shortage reported. Lavash denies it.','Cat circles grill, classified as normal.','Tip: the meat is always ready 5 minutes after everyone is hungry.'];
+const lines=()=>{const L=G.slice(),t=S.total,o=S.own;
+if(t<100)L.push('Local grill finally lit. It\'s a start.');
+if(t>=1e4)L.push('Neighbors form a queue, holding plates politely.');
+if(t>=1e6)L.push('City hall asks if you have a permit. You do not.');
+if(t>=1e9)L.push('Shashlik now accepted as currency in three villages.');
+if(t>=1e12)L.push('Economists admit the meat supply "does not add up".');
+if(o.vanya)L.push('Дядя Ваня says "a little more salt". Nobody argues.');
+if(o.dacha)L.push('Dacha committee votes to ban you. Vote fails, everyone is eating.');
+if(o.truck)L.push('Meat trucks block the highway. Drivers share a plate.');
+if(o.galaxy)L.push('Aliens request the marinade recipe. Request denied.');
+if(o.portal)L.push('Portal to Georgia opens. First thing through: wine.');
+if(o.god)L.push('The Mangal God is pleased. The smoke smells of victory.');
+if((o.marinad||0)>=10)L.push('Marinade now has its own marinade.');
+if(S.clicks>=500)L.push('You clicked '+S.clicks+' times. The skewer feels it.');
+if(S.pres>0)L.push('Rumor: the old recipe is back, and it hits different.');
+if(S.n>=PC)L.push('A new recipe whispers from the smoke. Maybe it is time.');
+return L};
+let last='';
+const R=a=>a[Math.floor(Math.random()*a.length)];const AN=['goats','geese','pigeons','hedgehogs','crows','cows','sheep','owls','badgers','ducks'],RD=['lavash','onions','pickles','kefir','folk songs','traffic jams','garden gnomes','Wi-Fi'];const LAD=[[0,'You feel like grilling. But nobody wants to eat your shashlik.'],[5,'Your first batch is charcoal. The neighbor’s dog sniffs it politely.'],[50,'The family agrees to try your shashlik.'],[100,'Your shashlik is popular on the street.'],[500,'People at the market are starting to talk.'],[1e3,'Your shashlik is talked about in three villages.'],[1e4,'Your shashlik has its own waiting list.'],[1e5,'Your shashlik has a website. Top comment: where is the lavash.'],[1e6,'People travel across the country for one skewer.'],[1e7,'Two cities open shashlik museums.'],[1e8,'A national holiday is declared in honor of your shashlik.'],[1e9,'Your shashlik is placed under government supervision.'],[1e10,'Visitors from neighboring planets ask for a skewer.'],[1e11,'Elder gods wake up hungry.'],[1e12,'The universe is now marinade, down to the molecule.'],[1e13,'it’s time for a new recipe']];const FQ=['A skewer turned in time saves nine.','The best marinade is patience.','Today the smoke blows your way. Enjoy it.','Share the lavash and the lavash shares back.'];const extra=()=>{const o=S.own,a=R(AN),r=R(RD),L=[`shashlik found to improve the mood of ${a}, says study!`,`shashlik tested on ${a}, found to have no ill effects.`,`shashlik unexpectedly popular among ${a}!`,`chef claims shashlik goes well with ${r}; panel splits in two.`,`nation cheers as lawmakers finally ban ${r}!`,'man robs bank, buys shashlik.','celebrity admits: “I just cannot stop eating shashlik.”'];if(o.mangal)L.push('local mangals blamed for sudden rise in neighbors just popping by!');if(o.shampur)L.push('skewer shortage! Experts agree: every skewer ends up in someone’s garage.');if(o.vanya)L.push('“A little more salt.” -Дядя Ваня','“Not like that, give it here.” -Дядя Ваня','“In my day we flipped it by feel.” -Дядя Ваня');if(o.dacha)L.push('dacha owners suspected of employing undeclared relatives at the grill!');if(o.brigada)L.push('mangal crews unionize; first demand: breaks near the lavash.');if(o.road)L.push('roadside shashlik stands jam the highway; drivers say it is worth it.');if(o.truck)L.push('meat trucks spotted driving in formation; officials call it suspiciously organized.');if(o.factory)L.push('shashlik factories linked to the sudden disappearance of Sundays!');if(o.kolkhoz)L.push('collective farm goes fully barbecue; the cows were not consulted.');if(o.spices)L.push('spice plant fumes make a whole county sneeze in harmony!');if(o.galaxy)L.push('astronomers confirm: the smoke on Jupiter is not a storm, it is a mangal.');if(o.portal)L.push('tourism to Georgia booming; locals ask the portal be moved a little left.');if(o.god)L.push('whispers say the Mangal God does not eat shashlik. He simply is shashlik.');if(o.marinad)L.push('marinade rumors: onions, kefir, vinegar... nobody knows the real recipe!');if(Object.keys(S.tier).length)L.push('grill masters swear birch wood makes it better; science disagrees.');if(Math.random()<.02)L.push('~'+R(['You have been chosen. The skewer will call soon.','Do not open the door. The smell is coming from inside.','The end is near. Bring bread.']));const ld=LAD.filter(x=>S.total>=x[0]).pop()[1];L.push('~'+ld,'~'+ld);return L};let fort=0;const nb=$('nbox');const showNews=manual=>{let m=null;if(!manual&&S.perks.fort&&Math.random()<.02){fort=1;m='~🍀 '+L2('Предсказание: ','Fortune: ')+R(ru?FQR:FQ)+L2(' (нажми!)',' (tap!)')}else{fort=0;const L=ru?newsR():lines().concat(extra());do{m=R(L)}while(m===last&&L.length>1)}last=m;nb.classList.toggle('fort',!!fort);const e=$('news');e.style.opacity=0;setTimeout(()=>{e.textContent=m[0]==='~'?m.slice(1):m[0]==='“'?m:L2('Новости: ','News: ')+m;e.style.opacity=1},300)};nb.onclick=()=>{if(fort){fort=0;nb.classList.remove('fort');const g=Math.min(sv()*600,Math.max(S.n,100));add(g);toast('🍀 '+L2('Предсказание! +','Fortune! +')+fmt(g)+' 🍢');draw();return}S.nclk=(S.nclk||0)+1;showNews(true)};nb.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();nb.onclick()}};
+// loop
+let lt=Date.now(),tk=0;
+setInterval(()=>{const t=Date.now(),d=(t-lt)/1000;lt=t;add(sv()*d);draw();checkAch();if(++tk%20===0)save()},100);
+setInterval(showNews,10000);
+document.documentElement.lang=LG;
+if(ru){document.title='Шашлык-кликер';document.querySelector('h1').textContent='Шашлык-кликер';['Магазин','Престиж','Награды'].forEach((x,i)=>{document.querySelectorAll('.tab')[i].textContent=x});['Усиления','Улучшения кликов','Производство','Перки'].forEach((x,i)=>{document.querySelectorAll('h2')[i].textContent=x});document.querySelector('#tab-pres .hint').innerHTML='Очки престижа: <b id="pp">0</b> · Престижей: <b id="pn">0</b>';$('pbtn').querySelector('small').textContent='Сбрасывает шашлыки, улучшения и производство. Даёт +5 очков престижа. Награды и перки остаются.';$('grill').setAttribute('aria-label','Пожарить шашлык');$('nbox').title='Нажми — следующая новость'}
+$('news').textContent=ru?'Новости: мангал разожжён, шампур готов. Соседи наблюдают.':'News: Fire lit. Skewer ready. The neighbors are watching.';
+$('lang').textContent=ru?'EN':'RU';$('lang').onclick=()=>{try{localStorage.setItem('shashlik-lang',ru?'en':'ru')}catch(e){}save();location.hash=ru?'#en':'#ru';location.reload()};
+drawAch();draw();
+})();
+</script>
+</body>
+</html>
