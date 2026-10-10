@@ -38,6 +38,7 @@ h2{font-size:1rem;margin:18px 0 8px}
 .up .cost{grid-row:1/3;grid-column:2;align-self:center;font-weight:800;color:var(--ember)}
 .own{font-weight:800;color:var(--mute);margin-left:6px}
 .perk.done{opacity:1;border-style:dashed;border-color:var(--mute)}
+.data{margin-top:20px}.data summary{cursor:pointer;color:var(--mute)}.data textarea{width:100%;margin-top:8px;font:12px/1.3 monospace;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}.drow{display:flex;gap:8px}.drow .reset{margin-top:8px}
 .achs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .ach{font-size:.8rem;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--mute)}
 .ach.on{color:var(--ink);border-color:var(--ember)}
@@ -82,6 +83,7 @@ h2{font-size:1rem;margin:18px 0 8px}
 <section id="tab-ach" class="hide">
 <p class="hint" id="achinfo"></p><div class="achs" id="achs"></div>
 </section>
+<details class="data"><summary id="dsum">Save data</summary><textarea id="dbox" rows="4" spellcheck="false" aria-label="Save code"></textarea><div class="drow"><button class="reset" id="dexp">Export</button><button class="reset" id="dimp">Import</button></div></details>
 <button class="reset" id="reset">Reset everything</button>
 </main>
 <div id="toast" role="status"></div>
@@ -197,7 +199,10 @@ setInterval(showNews,10000);
 document.documentElement.lang=LG;
 if(ru){document.title='Шашлык-кликер';document.querySelector('h1').textContent='Шашлык-кликер';['Магазин','Престиж','Награды'].forEach((x,i)=>{document.querySelectorAll('.tab')[i].textContent=x});['Усиления','Улучшения кликов','Производство','Перки'].forEach((x,i)=>{document.querySelectorAll('h2')[i].textContent=x});document.querySelector('#tab-pres .hint').innerHTML='Очки престижа: <b id="pp">0</b> · Престижей: <b id="pn">0</b>';$('pbtn').querySelector('small').textContent='Сбрасывает шашлыки, улучшения и производство. Даёт +5 очков престижа. Награды и перки остаются.';$('grill').setAttribute('aria-label','Пожарить шашлык');$('nbox').title='Нажми — следующая новость'}
 $('news').textContent=ru?'Новости: мангал разожжён, шампур готов. Соседи наблюдают.':'News: Fire lit. Skewer ready. The neighbors are watching.';
-$('lang').textContent=ru?'EN':'RU';$('lang').onclick=()=>{try{localStorage.setItem('shashlik-lang',ru?'en':'ru')}catch(e){}save();location.hash=ru?'#en':'#ru';location.reload()};
+$('lang').textContent=ru?'EN':'RU';
+$('dsum').textContent=L2('Данные сохранения','Save data');$('dexp').textContent=L2('Экспорт','Export');$('dimp').textContent=L2('Импорт','Import');$('dbox').placeholder=L2('Код сохранения появится здесь. Для импорта вставь код сюда.','Your save code appears here. To import, paste a code here.');
+$('dexp').onclick=()=>{save();const c='SHASHLIK1:'+btoa(JSON.stringify(S)),b=$('dbox');b.value=c;b.focus();b.select();toast(L2('Код готов. Скопируй его из поля.','Save code ready. Copy it from the box.'));try{navigator.clipboard.writeText(c).then(()=>toast(L2('Скопировано!','Copied!')),()=>{})}catch(e){}};
+$('dimp').onclick=()=>{try{const t=$('dbox').value.trim();if(t.indexOf('SHASHLIK1:')!==0)throw 0;const p=JSON.parse(atob(t.slice(10)));if(!p||!Number.isFinite(p.n)||!p.own||typeof p.own!=='object')throw 0;S=Object.assign({n:0,total:0,clicks:0,own:{},tier:{},pp:0,ppE:0,pres:0,perks:{},ach:{}},p);S.total=Math.max(S.total||0,S.n);bKey='x';save();drawAch();draw();$('dbox').value='';toast(L2('Сохранение загружено!','Save imported!'))}catch(e){toast(L2('Неверный код сохранения','Invalid save code'))}};$('lang').onclick=()=>{try{localStorage.setItem('shashlik-lang',ru?'en':'ru')}catch(e){}save();location.hash=ru?'#en':'#ru';location.reload()};
 drawAch();draw();
 })();
 </script>
